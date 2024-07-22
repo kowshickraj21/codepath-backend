@@ -1,0 +1,1 @@
+It is the backend for Code Path - A platform where you can solve problems in a structured way to crack your coding interview.

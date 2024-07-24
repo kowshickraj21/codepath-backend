@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"main/controllers"
 	"main/initializers"
 
 	"github.com/gin-gonic/gin"
@@ -8,7 +11,13 @@ import (
 
 func init(){
 	initializers.LoadEnv();
-	initializers.ConnectDB();
+	db := initializers.ConnectDB();
+	userController := controllers.NewUserController(db);
+	newUser, err := userController.CreateUser("johndoe", "John Doe", "john.doe@example.com", "http://example.com/picture.jpg", []int{1, 2, 3})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("User created with username: %s\n", newUser.Username)
 }
 
 func main() {

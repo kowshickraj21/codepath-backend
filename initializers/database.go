@@ -10,9 +10,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var DataBase *sql.DB
+var db *sql.DB
 
-func ConnectDB() {
+func ConnectDB() (*sql.DB) {
 	var err error
 
 	connStr := os.Getenv("DB_URL")
@@ -22,14 +22,15 @@ func ConnectDB() {
 		os.Exit(1)
 	}
 
-	DataBase, err = sql.Open("postgres", connStr)
+	db, err = sql.Open("postgres", connStr)
 
 	if err != nil {
 		log.Println(err)
 		log.Fatalln("[DATABASE] Connection problem")
+		return nil;
 	}
 	
-	err = DataBase.Ping();
+	err = db.Ping();
 
 	if err != nil {
 		log.Println(err)
@@ -37,6 +38,7 @@ func ConnectDB() {
 	}
 
 	fmt.Printf("[DATABASE] Connected to Database")
+	return db;
 }
 
 func IsStringEmpty(str string) bool {

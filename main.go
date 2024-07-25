@@ -1,29 +1,29 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"main/models"
+
 	"main/controllers"
 	"main/initializers"
 
 	"github.com/gin-gonic/gin"
 )
 
-func init(){
-	initializers.LoadEnv();
-	db := initializers.ConnectDB();
-	userController := controllers.NewUserController(db);
-	newUser, err := userController.CreateUser("johndoe", "John Doe", "john.doe@example.com", "http://example.com/picture.jpg", []int{1, 2, 3})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("User created with username: %s\n", newUser.Username)
-}
 
 func main() {
+	initializers.LoadEnv();
+	db := initializers.ConnectDB();
+
 	router := gin.Default()
-	router.GET("/", func(context *gin.Context) {
-		context.String(200, "hello")
+	router.POST("/user", func(ctx *gin.Context) {
+		var user models.User
+		if err := ctx.ShouldBindJSON(&user); err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		controllers.CreateUser(db,user)
 	})
+
+
 	router.Run(":3050")
 }

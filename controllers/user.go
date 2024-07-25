@@ -3,39 +3,29 @@ package controllers
 import (
 	"database/sql"
 	"main/models"
+
+	"github.com/lib/pq"
 )
 
-// UserController handles user-related operations
-type UserController struct {
-	DB *sql.DB
-}
 
-// NewUserController creates a new UserController
-func NewUserController(db *sql.DB) *UserController {
-	return &UserController{DB: db}
-}
-
-// CreateUser creates a new user
-func (uc *UserController) CreateUser(username, name, email, picture string, problems []int) (*models.User, error) {
-	user := &models.User{
-		Username: username,
-		Name:     name,
-		Email:    email,
-		Picture:  picture,
-		Problems: problems,
+func CreateUser(db *sql.DB, user models.User) (error) {
+	query := `INSERT INTO Users (username, name, email, picture, problems) VALUES ($1, $2, $3, $4, $5) RETURNING username`
+	err := db.QueryRow(query, user.Username, user.Name, user.Email, user.Picture, pq.Array(user.Problems)).Scan(&user.Username)
+	if err != nil {
+		return err
 	}
-	err := models.CreateUser(uc.DB, user)
+	return nil
+}
+
+func GetUser(db *sql.DB, username string) (*models.User, error) {
+	query := `SELECT * FROM Users WHERE username = $1`
+	row := db.QueryRow(query, username)
+
+	var user models.User
+	err := row.Scan(&user.Username, &user.Name, &user.Email, &user.Picture, pq.Array(&user.Problems))
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
-}
 
-// GetUser retrieves a user by username
-func (uc *UserController) GetUser(username string) (*models.User, error) {
-	user, err := models.GetUser(uc.DB, username)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+	return &user, nil
 }

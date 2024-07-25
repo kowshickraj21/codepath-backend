@@ -3,28 +3,43 @@ package controllers
 import (
 	"database/sql"
 	"main/models"
+
+	"github.com/lib/pq"
 )
 
-type problemController struct{
-	DB *sql.DB
-}
 
-func newProblemController(db *sql.DB) *problemController {
-	return &problemController{DB:db}
-}
+func ViewProblem(db *sql.DB,pid int) (*models.Problem,error) {
+	query := `SELECT * FROM problems WHERE pid = $1`;
+	row := db.QueryRow(query,pid);
 
-func (pc *problemController) ViewProblem(pid int) (*models.Problem,error){
-	problem,err := models.ViewProblem(pc.DB,pid)
-	if err != nil {
+	var problem models.Problem
+	err := row.Scan(&problem.Pid,&problem.Title,&problem.Description,pq.Array(&problem.Examples),pq.Array(&problem.Testcases));
+	if err != nil{
 		return nil,err;
 	}
-	return problem,nil;
+
+	return &problem,nil;
 }
 
-func (pc *problemController) FetchProblems() ([]models.Problem,error){
-	problem,err := models.FetchProblems(pc.DB)
+
+func FetchProblems(db *sql.DB) ([]models.Problem,error) {
+	query := `SELECT pid,title FROM problems`;
+	rows,err := db.Query(query);
 	if err != nil {
-		return nil,err;
+        return nil, err
+    }
+    defer rows.Close()
+
+	var problems []models.Problem
+	for rows.Next() {
+		var problem models.Problem
+		err := rows.Scan(&problem.Pid,&problem.Title);
+		if err != nil{
+			return nil,err;
+		}
+		problems = append(problems,problem)
 	}
-	return problem,nil;
+	
+
+	return problems,nil;
 }

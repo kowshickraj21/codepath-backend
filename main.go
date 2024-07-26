@@ -1,11 +1,10 @@
 package main
 
 import (
-	"main/models"
-	"strconv"
-
 	"main/controllers"
 	"main/initializers"
+	"main/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -38,14 +37,17 @@ func main() {
 
 	router.GET("/problem/:problemId", func(ctx *gin.Context) {
 		idstr := ctx.Param("problemId");
-
 		id,err := strconv.Atoi(idstr)
 
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": err})
 		}
 
-		controllers.ViewProblem(db,id)
+		problem,err := controllers.ViewProblem(db,id);
+		if err != nil {
+			ctx.JSON(500,err);
+		}
+		ctx.JSON(200,problem);
 	})
 
 	router.GET("/problems", func(ctx *gin.Context) {

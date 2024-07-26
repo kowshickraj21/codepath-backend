@@ -18,11 +18,12 @@ func CreateUser(db *sql.DB, user models.User) (error) {
 }
 
 func GetUser(db *sql.DB, username string) (*models.User, error) {
-	query := `SELECT * FROM Users WHERE username = $1`
+	query := `SELECT username, name, email, picture, problems FROM Users WHERE username = $1`
 	row := db.QueryRow(query, username)
 
 	var user models.User
 	err := row.Scan(&user.Username, &user.Name, &user.Email, &user.Picture, pq.Array(&user.Problems))
+
 	if err != nil {
 		return nil, err
 	}

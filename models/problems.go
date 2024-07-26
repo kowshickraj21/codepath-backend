@@ -4,11 +4,11 @@ type Problem struct {
 	Pid         int
 	Title       string
 	Description string
-	Examples    []io
-	Testcases   []io
+	Examples    []IO
+	Testcases   []IO
 }
 
-type io struct {
-	input  string
-	output string
+type IO struct {
+	Input  string `json:"input"`
+	Output string `json:"output"`
 }

@@ -37,7 +37,7 @@ func ConnectDB() (*sql.DB) {
 		log.Fatalln("[DATABASE] Could not ping the db.")
 	}
 
-	fmt.Printf("[DATABASE] Connected to Database")
+	fmt.Println("[DATABASE] Connected to Database")
 	return db;
 }
 

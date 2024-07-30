@@ -13,6 +13,8 @@ import (
 func main() {
 	initializers.LoadEnv();
 	db := initializers.ConnectDB();
+	controllers.CreateReq();
+	// controllers.GetReq();
 
 	router := gin.Default()
 	router.POST("/user", func(ctx *gin.Context) {

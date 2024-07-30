@@ -1,29 +1,64 @@
 package controllers
 
 import (
-	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io"
 	"main/models"
+	"net/http"
+	"os"
+	"strings"
 )
 
-func newSubmission(db *sql.DB,submission models.Submissions) (sql.Result,error) {
-	query := `INSERT INTO submissions VALUES ($1,$2,$3,$4)`
-	res,err := db.Exec(query,submission.Pid,submission.Username,submission.Code,submission.Language);
-	if(err != nil){
+
+func CreateReq() (*models.RequestToken,error) {
+
+	ApiKey := os.Getenv("JUDGE0_API_KEY")
+	ApiHost := os.Getenv("JUDGE0_API_HOST")
+
+
+	url := "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false&fields=*"
+
+	payload := strings.NewReader("{\"language_id\":52,\"source_code\":\"I2luY2x1ZGUgPHN0ZGlvLmg+CgppbnQgbWFpbih2b2lkKSB7CiAgY2hhciBuYW1lWzEwXTsKICBzY2FuZigiJXMiLCBuYW1lKTsKICBwcmludGYoImhlbGxvLCAlc1xuIiwgbmFtZSk7CiAgcmV0dXJuIDA7Cn0=\",\"stdin\":\"SnVkZ2Uw\"}")
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("x-rapidapi-key", ApiKey)
+	req.Header.Add("x-rapidapi-host", ApiHost)
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
 		return nil,err
 	}
-	return res,nil
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+
+	var token models.RequestToken
+	json.Unmarshal(body,&token)
+	return &token,nil;
 }
 
-func getSubmission(db *sql.DB,pid int,username string,language string) (*models.Submissions,error) {
-	query := `SELECT * FROM submissions WHERE pid = $1 AND username = $2 AND language = $3`
-	rows,err := db.Query(query,pid,username,language);
-	if(err != nil){
-		return nil,err
-	}
-	var submission models.Submissions
-	err = rows.Scan(&submission.Pid,&submission.Username,&submission.Code,&submission.Language)
+func GetReq() error{
+
+	ApiKey := os.Getenv("JUDGE0_API_KEY")
+	ApiHost := os.Getenv("JUDGE0_API_HOST")
+
+	url := "https://judge0-ce.p.rapidapi.com/submissions/447b0a7b-0c27-4ca0-bf66-4f1506647785?base64_encoded=true&fields=*"
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("x-rapidapi-key", ApiKey)
+	req.Header.Add("x-rapidapi-host", ApiHost)
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil,err;
+		return err;
 	}
-	return &submission,nil
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+
+	fmt.Println(res)
+	fmt.Println(string(body))
+	return nil;
 }

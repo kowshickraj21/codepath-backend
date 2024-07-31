@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"main/controllers"
 	"main/initializers"
 	"main/models"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,8 +15,6 @@ import (
 func main() {
 	initializers.LoadEnv();
 	db := initializers.ConnectDB();
-	controllers.CreateReq();
-	// controllers.GetReq();
 
 	router := gin.Default()
 	router.POST("/user", func(ctx *gin.Context) {
@@ -61,5 +61,21 @@ func main() {
 		ctx.JSON(200,problems);
 	})
 
+	router.POST("/submit",func(ctx *gin.Context) {
+		var code models.Code
+		ctx.ShouldBindJSON(&code)
+		token,err:= controllers.CreateReq(code.Code);
+		if err != nil {
+			ctx.JSON(500,err);
+		}
+		fmt.Println(token)
+		var res *models.Judge0Response
+		time.Sleep(1 * time.Second)
+		res,err = controllers.GetReq(token);
+		if err != nil {
+			ctx.JSON(500,err);
+		}
+		ctx.JSON(200,res);
+	})
 	router.Run(":3050")
 }

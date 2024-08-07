@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -9,26 +10,22 @@ import (
 	"main/models"
 	"net/http"
 	"os"
+
+	"strconv"
 	"strings"
 )
 
 
-func CreateReq(code string) (*models.RequestToken,error) {
+func CreateReq(db *sql.DB,code models.Code,id string) (*models.RequestToken,error) {
 
-	file,err := os.ReadFile("problems/1/Main.java.txt")
-	if err != nil {
-		return nil,err;
-	}
-	fmt.Println(code)
-	boilerplate := string(file)
-	sourceCode := strings.Replace(boilerplate,"$",code,1) 
-    input := "15"
-    expectedOutput := "25"
-	fmt.Println(sourceCode)
-    encodedSourceCode := encodeBase64(sourceCode)
+	sourceCode := readFile(code,id)
+	Id,_ := strconv.Atoi(id)
+	problem := readCases(db,Id)
+    input := problem.Testcases[0].Input
+    expectedOutput := problem.Testcases[0].Output
 
     requestPayload := models.Judge0Request{
-        SourceCode:     encodedSourceCode,
+        SourceCode:     sourceCode,
         LanguageID:     91,
         Stdin:          encodeBase64(input),
         ExpectedOutput: encodeBase64(expectedOutput),
@@ -45,7 +42,6 @@ func CreateReq(code string) (*models.RequestToken,error) {
 
 	url := "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false&fields=*"
 
-	// payload := strings.NewReader("{\"language_id\":52,\"source_code\":\"I2luY2x1ZGUgPHN0ZGlvLmg+CgppbnQgbWFpbih2b2lkKSB7CiAgY2hhciBuYW1lWzEwXTsKICBzY2FuZigiJXMiLCBuYW1lKTsKICBwcmludGYoImhlbGxvLCAlc1xuIiwgbmFtZSk7CiAgcmV0dXJuIDA7Cn0=\",\"stdin\":\"SnVkZ2Uw\"}")
 
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 
@@ -53,7 +49,6 @@ func CreateReq(code string) (*models.RequestToken,error) {
 	req.Header.Add("x-rapidapi-host", ApiHost)
 	req.Header.Add("Content-Type", "application/json")
 
-	// fmt.Println(req)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil,err
@@ -97,10 +92,27 @@ func encodeBase64(data string) string {
     return base64.StdEncoding.EncodeToString([]byte(data))
 }
 
-// func decodeBase64(encoded string) (string, error) {
-//     decoded, err := base64.StdEncoding.DecodeString(encoded)
-//     if err != nil {
-//         return "", err
-//     }
-//     return string(decoded), nil
-// }
+func readFile(code models.Code,id string) (string){
+	fileurl := "problems/$1/Main.$2.txt"
+	fileurl = strings.Replace(fileurl,"$1",id,1)
+	fileurl = strings.Replace(fileurl,"$2",code.Language,1)
+	
+	file,err := os.ReadFile(fileurl)
+	if err != nil {
+		return "";
+	}
+	boilerplate := string(file)
+	sourceCode := strings.Replace(boilerplate,"$",code.Code,1) 
+	return encodeBase64(sourceCode)
+}
+
+func readCases(db *sql.DB,id int) (*models.Problem) {
+	query := `SELECT examples,testcases FROM problems where pid = $1`
+	row := db.QueryRow(query,id);
+	var problem models.Problem
+	err := row.Scan(&problem.Examples,&problem.Testcases)
+	if err != nil{
+		return nil
+	}
+	return &problem
+}

@@ -3,10 +3,25 @@ import java.util.*;
 public class Main{
 
     $
+
     public static void main(String[] args){
         Scanner sc = new Scanner(System.in);
-        String num = sc.nextLine();
+        String input = sc.nextLine();
+        String targetInput = sc.nextLine();
         sc.close();
-        System.out.print(solution(Integer.parseInt(num)));
+
+        String[] inputString =  input.split(",");
+        int [] nums = new int[inputString.length];
+
+        for (int i = 0; i < inputString.length; i++) {
+                nums[i] = Integer.parseInt(inputString[i].trim());
+        }
+
+        int target =  Integer.parseInt(targetInput.trim());
+
+        int[] out = twoSum(nums, target);
+        for(int i=0;i<out.length;i++){
+            System.out.print(out[i] + " ");
+        }
     }
 }

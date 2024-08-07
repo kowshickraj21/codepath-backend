@@ -29,5 +29,6 @@ type Judge0Request struct {
 }
 
 type Code struct {
-	Code string `json:"code"`
+	Language string `json:"language"`
+	Code     string `json:"code"`
 }

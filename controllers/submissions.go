@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 
-	"strconv"
 	"strings"
 )
 
@@ -19,14 +18,14 @@ import (
 func CreateReq(db *sql.DB,code models.Code,id string) (*models.RequestToken,error) {
 
 	sourceCode := readFile(code,id)
-	Id,_ := strconv.Atoi(id)
-	problem := readCases(db,Id)
-    input := problem.Testcases[0].Input
-    expectedOutput := problem.Testcases[0].Output
+	// Id,_ := strconv.Atoi(id)
+	// problem := readCases(db,Id)
+    input := "2,7,11,15 \n 9"
+    expectedOutput := "1 0 "
 
     requestPayload := models.Judge0Request{
         SourceCode:     sourceCode,
-        LanguageID:     91,
+        LanguageID:     91,  // HardCoded Java
         Stdin:          encodeBase64(input),
         ExpectedOutput: encodeBase64(expectedOutput),
     }
@@ -94,6 +93,7 @@ func encodeBase64(data string) string {
 
 func readFile(code models.Code,id string) (string){
 	fileurl := "problems/$1/Main.$2.txt"
+	fmt.Println(code)
 	fileurl = strings.Replace(fileurl,"$1",id,1)
 	fileurl = strings.Replace(fileurl,"$2",code.Language,1)
 	

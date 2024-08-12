@@ -1,0 +1,3 @@
+public static int[] twosum(int[] nums,int target){
+    
+}

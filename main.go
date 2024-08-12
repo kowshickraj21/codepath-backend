@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"main/auth"
@@ -10,8 +9,10 @@ import (
 	"main/models"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -19,6 +20,7 @@ import (
 
 var googleOauthConfig = &oauth2.Config{}
 var db = &sql.DB{}
+
 func init(){
 	initializers.LoadEnv();
 	db = initializers.ConnectDB();
@@ -36,6 +38,14 @@ func init(){
 func main() {
 
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
 	router.POST("/user", func(ctx *gin.Context) {
 		var user models.User
 		if err := ctx.ShouldBindJSON(&user); err != nil {
@@ -85,6 +95,7 @@ func main() {
 
 		var code models.Code
 		ctx.ShouldBindJSON(&code)
+		fmt.Println(code.Language)
 		token,err:= controllers.CreateReq(db,code,id);
 		if err != nil {
 			ctx.JSON(500,err);
@@ -99,16 +110,33 @@ func main() {
 		ctx.JSON(200,res);
 	})
 
+	router.GET("/code/:problemId/:language",func(ctx *gin.Context) {
+		id := ctx.Param("problemId");
+		language := ctx.Param("language");
+
+		fileurl := "problems/$1/boilerplate.$2.txt"
+		fileurl = strings.Replace(fileurl,"$1",id,1)
+		fileurl = strings.Replace(fileurl,"$2",language,1)
+		
+		file,err := os.ReadFile(fileurl)
+		if err != nil {
+			ctx.JSON(500,err);
+		}
+		boilerplate := string(file)
+		fmt.Println(boilerplate)
+		ctx.JSON(200,boilerplate);
+	})
+
 	router.GET("/auth/google/callback", func(ctx *gin.Context) {
 		code := ctx.Query("code")
-		token,err := googleOauthConfig.Exchange(context.Background(),code)
-		if err != nil {
-			fmt.Println("Error in CompleteUserAuth:", err)
-			ctx.JSON(500,err)
-			return
-		}
+		// token,err := googleOauthConfig.Exchange(context.Background(),code)
+		// if err != nil {
+		// 	fmt.Println("Error in CompleteUserAuth:", err)
+		// 	ctx.JSON(500,err)
+		// 	return
+		// }
 
-		user,err := auth.GetUserInfo(token.AccessToken)
+		user,err := auth.GetUserInfo(code)
 		if err != nil {
 			ctx.JSON(500,err)
 		}

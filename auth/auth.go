@@ -13,7 +13,8 @@ import (
 func GetUserInfo(accesstoken string) (map[string]interface{}, error) {
 	infoEndpoint := "https://googleapis.com/oauth2/v2/userinfo"
 	res,err := http.Get(fmt.Sprintf("%s?access_token=%s",infoEndpoint,accesstoken))
-	
+	fmt.Println("response")
+	fmt.Println(res)
 	if err != nil {
 		return nil,err
 	}

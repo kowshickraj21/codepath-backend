@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"main/models"
 	"net/http"
 	"os"
 	"time"
@@ -10,29 +11,26 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func GetUserInfo(accesstoken string) (map[string]interface{}, error) {
-	infoEndpoint := "https://googleapis.com/oauth2/v2/userinfo"
-	res,err := http.Get(fmt.Sprintf("%s?access_token=%s",infoEndpoint,accesstoken))
-	fmt.Println("response")
-	fmt.Println(res)
+func GetUserInfo(accessToken string) (*models.GoogleUser, error) {
+	infoEndpoint := "https://www.googleapis.com/oauth2/v2/userinfo"
+	res, err := http.Get(fmt.Sprintf("%s?access_token=%s", infoEndpoint, accessToken))
 	if err != nil {
 		return nil,err
 	}
 	defer res.Body.Close()
-
-	var userInfo map[string]interface{}
+	
+	var userInfo models.GoogleUser
 	if err := json.NewDecoder(res.Body).Decode(&userInfo); err != nil {
 		return nil, err
 	}
-	
-	return userInfo,nil
+	return &userInfo,nil
 }
 
-func SignJWT(user map[string]interface{})(string,error){
+func SignJWT(user *models.GoogleUser)(string,error){
 	claims := jwt.MapClaims{
-		"sub": user["id"],
-		"name": user["name"],
-		"email": user["email"],
+		"sub": user.Id,
+		"name": user.Name,
+		"email": user.Email,
 		"iss": "oauth-app-golang",
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	}

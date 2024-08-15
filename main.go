@@ -129,12 +129,6 @@ func main() {
 
 	router.GET("/auth/google/callback", func(ctx *gin.Context) {
 		code := ctx.Query("code")
-		// token,err := googleOauthConfig.Exchange(context.Background(),code)
-		// if err != nil {
-		// 	fmt.Println("Error in CompleteUserAuth:", err)
-		// 	ctx.JSON(500,err)
-		// 	return
-		// }
 
 		user,err := auth.GetUserInfo(code)
 		if err != nil {

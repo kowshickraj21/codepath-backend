@@ -9,17 +9,17 @@ import (
 
 
 func CreateUser(db *sql.DB, user models.User) (sql.Result,error) {
-	query := `INSERT INTO Users (name, email, picture, problems) VALUES ($1, $2, $3, $4, $5)`
-	res,err := db.Exec(query, user.Name, user.Email, user.Picture, pq.Array(user.Problems))
+	query := `INSERT INTO Users (id,name, email, picture, problems) VALUES ($1, $2, $3, $4, $5)`
+	res,err := db.Exec(query,user.Id, user.Name, user.Email, user.Picture, pq.Array(user.Problems))
 	if err != nil {
 		return nil,err
 	}
 	return res,nil
 }
 
-func GetUser(db *sql.DB, username string) (*models.User, error) {
-	query := `SELECT name, email, picture, problems FROM Users WHERE username = $1`
-	row := db.QueryRow(query, username)
+func GetUser(db *sql.DB, email string) (*models.User, error) {
+	query := `SELECT name, email, picture, problems FROM Users WHERE email = $1`
+	row := db.QueryRow(query, email)
 
 	var user models.User
 	err := row.Scan(&user.Name, &user.Email, &user.Picture, pq.Array(&user.Problems))

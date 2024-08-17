@@ -46,25 +46,24 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	router.POST("/user", func(ctx *gin.Context) {
-		var user models.User
-		if err := ctx.ShouldBindJSON(&user); err != nil {
-			ctx.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-		controllers.CreateUser(db,user)
-	})
+	// router.POST("/user", func(ctx *gin.Context) {
+	// 	var user models.User
+	// 	if err := ctx.ShouldBindJSON(&user); err != nil {
+	// 		ctx.JSON(500, gin.H{"error": err.Error()})
+	// 		return
+	// 	}
+	// 	controllers.CreateUser(db,user)
+	// })
 
-	router.GET("/user/:username", func(ctx *gin.Context) {
-		username := ctx.Param("username");
-		user,err := controllers.GetUser(db,username);
+	// router.GET("/user/:username", func(ctx *gin.Context) {
+	// 	username := ctx.Param("username");
+	// 	user,err := controllers.GetUser(db,username);
 
-		if err != nil {
-			ctx.JSON(500,err);
-		}
-
-		ctx.JSON(200,user)
-	})
+	// 	if err != nil {
+	// 		ctx.JSON(500,err);
+	// 	}
+	// 	ctx.JSON(200,user)
+	// })
 
 	router.GET("/problem/:problemId", func(ctx *gin.Context) {
 		idstr := ctx.Param("problemId");
@@ -130,17 +129,12 @@ func main() {
 	router.GET("/auth/google/callback", func(ctx *gin.Context) {
 		code := ctx.Query("code")
 
-		user,err := auth.GetUserInfo(code)
+		token,err := auth.GetUserInfo(db,code)
 		if err != nil {
 			ctx.JSON(500,err)
 		}
 
-		signedToken,err := auth.SignJWT(user)
-		if err != nil {
-			ctx.JSON(500,err)
-		}
-
-		ctx.JSON(200,signedToken)
+		ctx.JSON(200,token)
 		 
 	})
 

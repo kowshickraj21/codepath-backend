@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"main/controllers"
 	"main/models"
 	"net/http"
 	"os"
@@ -11,22 +13,33 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func GetUserInfo(accessToken string) (*models.GoogleUser, error) {
+func GetUserInfo(db *sql.DB,accessToken string) (string, error) {
 	infoEndpoint := "https://www.googleapis.com/oauth2/v2/userinfo"
 	res, err := http.Get(fmt.Sprintf("%s?access_token=%s", infoEndpoint, accessToken))
 	if err != nil {
-		return nil,err
+		return "",err
 	}
 	defer res.Body.Close()
 	
-	var userInfo models.GoogleUser
+	var userInfo models.User
 	if err := json.NewDecoder(res.Body).Decode(&userInfo); err != nil {
-		return nil, err
+		return "", err
 	}
-	return &userInfo,nil
+
+	user,_:= controllers.GetUser(db,userInfo.Email)
+	if(user == nil){
+		controllers.CreateUser(db,userInfo)
+	}
+
+
+	token,err := SignJWT(&userInfo);
+	if(err != nil) {
+		return "",err;
+	}
+	return token,nil;
 }
 
-func SignJWT(user *models.GoogleUser)(string,error){
+func SignJWT(user *models.User)(string,error){
 	claims := jwt.MapClaims{
 		"sub": user.Id,
 		"name": user.Name,

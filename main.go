@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"main/auth"
 	"main/controllers"
 	"main/initializers"
 	"main/models"
@@ -46,24 +45,16 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// router.POST("/user", func(ctx *gin.Context) {
-	// 	var user models.User
-	// 	if err := ctx.ShouldBindJSON(&user); err != nil {
-	// 		ctx.JSON(500, gin.H{"error": err.Error()})
-	// 		return
-	// 	}
-	// 	controllers.CreateUser(db,user)
-	// })
-
-	// router.GET("/user/:username", func(ctx *gin.Context) {
-	// 	username := ctx.Param("username");
-	// 	user,err := controllers.GetUser(db,username);
-
-	// 	if err != nil {
-	// 		ctx.JSON(500,err);
-	// 	}
-	// 	ctx.JSON(200,user)
-	// })
+	router.GET("/user",func(ctx *gin.Context) {
+	 var jwt models.JWT
+	 ctx.ShouldBindJSON(&jwt) 
+	 user,err := controllers.GetUser(db,jwt.Token)
+	 if(err != nil){
+		ctx.JSON(500,err);
+	 }
+	 ctx.JSON(200,user);
+	 
+	})
 
 	router.GET("/problem/:problemId", func(ctx *gin.Context) {
 		idstr := ctx.Param("problemId");
@@ -94,7 +85,7 @@ func main() {
 
 		var code models.Code
 		ctx.ShouldBindJSON(&code)
-		fmt.Println(code.Language)
+
 		token,err:= controllers.CreateReq(db,code,id);
 		if err != nil {
 			ctx.JSON(500,err);
@@ -129,7 +120,7 @@ func main() {
 	router.GET("/auth/google/callback", func(ctx *gin.Context) {
 		code := ctx.Query("code")
 
-		token,err := auth.GetUserInfo(db,code)
+		token,err := controllers.GetUserInfo(db,code)
 		if err != nil {
 			ctx.JSON(500,err)
 		}

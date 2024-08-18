@@ -1,10 +1,9 @@
-package auth
+package controllers
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"main/controllers"
 	"main/models"
 	"net/http"
 	"os"
@@ -26,9 +25,9 @@ func GetUserInfo(db *sql.DB,accessToken string) (string, error) {
 		return "", err
 	}
 
-	user,_:= controllers.GetUser(db,userInfo.Email)
+	user,_:= GetUser(db,userInfo.Email)
 	if(user == nil){
-		controllers.CreateUser(db,userInfo)
+		CreateUser(db,userInfo)
 	}
 
 
@@ -54,4 +53,28 @@ func SignJWT(user *models.User)(string,error){
 		return "",err;
 	}
 	return signed,nil
+}
+
+func ParseJWT(token string)(*models.User,error){
+	JWT,err := jwt.Parse(token,func(tok *jwt.Token)(interface{}, error){
+		if _, ok := tok.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", tok.Header["alg"])
+		}
+		return []byte(os.Getenv("JWT_KEY")), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := JWT.Claims.(jwt.MapClaims); ok && JWT.Valid {
+
+		user := &models.User{
+			Id:    claims["sub"].(string),
+			Name:  claims["name"].(string),
+			Email: claims["email"].(string),
+		}
+		return user, nil
+	} else {
+		return nil, fmt.Errorf("invalid token")
+	}
 }

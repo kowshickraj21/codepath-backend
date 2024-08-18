@@ -7,3 +7,7 @@ type User struct {
 	Name     string `json:"name"`
 	Problems []int64
 }
+
+type JWT struct {
+	Token string `json:"token"`
+}

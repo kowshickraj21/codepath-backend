@@ -46,9 +46,9 @@ func main() {
 	}))
 
 	router.GET("/user",func(ctx *gin.Context) {
-	 var jwt models.JWT
-	 ctx.ShouldBindJSON(&jwt) 
-	 user,err := controllers.GetUser(db,jwt.Token)
+	 jwt := ctx.Query("token")
+	 fmt.Println(jwt)
+	 user,err := controllers.GetUser(db,jwt)
 	 if(err != nil){
 		ctx.JSON(500,err);
 	 }

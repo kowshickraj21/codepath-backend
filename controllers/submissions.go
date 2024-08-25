@@ -10,18 +10,25 @@ import (
 	"main/models"
 	"net/http"
 	"os"
-
+	"strconv"
 	"strings"
+
+	"github.com/lib/pq"
 )
 
 
 func CreateReq(db *sql.DB,code models.Code,id string) (*models.RequestToken,error) {
 
 	sourceCode := readFile(code,id)
-	// Id,_ := strconv.Atoi(id)
-	// problem := readCases(db,Id)
-    input := "2,7,11,15 \n 9"
-    expectedOutput := "1 0 "
+	Id,_ := strconv.Atoi(id)
+	testcases,err := readCases(db,Id)
+
+	if err != nil{
+		return nil,err
+	}
+
+	input := testcases[1].Input
+    expectedOutput := testcases[1].Output
 
     requestPayload := models.Judge0Request{
         SourceCode:     sourceCode,
@@ -93,7 +100,6 @@ func encodeBase64(data string) string {
 
 func readFile(code models.Code,id string) (string){
 	fileurl := "problems/$1/Main.$2.txt"
-	fmt.Println(code)
 	fileurl = strings.Replace(fileurl,"$1",id,1)
 	fileurl = strings.Replace(fileurl,"$2",code.Language,1)
 	
@@ -106,13 +112,26 @@ func readFile(code models.Code,id string) (string){
 	return encodeBase64(sourceCode)
 }
 
-func readCases(db *sql.DB,id int) (*models.Problem) {
-	query := `SELECT examples,testcases FROM problems where pid = $1`
-	row := db.QueryRow(query,id);
-	var problem models.Problem
-	err := row.Scan(&problem.Examples,&problem.Testcases)
-	if err != nil{
-		return nil
+func readCases(db *sql.DB, id int) ([]models.IO, error) {
+	query := `SELECT testcases FROM problems WHERE pid = $1`
+	row := db.QueryRow(query, id)
+
+	var testcaseStr [] string
+	var testcases []models.IO
+
+	err := row.Scan(pq.Array(&testcaseStr))
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return nil, err
 	}
-	return &problem
+
+	for i := range testcaseStr{
+		var testcase models.IO
+	json.Unmarshal([]byte(testcaseStr[i]),&testcase);
+	testcase.Input = strings.ReplaceAll(testcase.Input,"n","\n")
+	testcases = append(testcases,testcase)
+	}
+
+
+	return testcases, nil
 }

@@ -17,18 +17,20 @@ import (
 )
 
 
-func CreateReq(db *sql.DB,code models.Code,id string) (*models.RequestToken,error) {
+func CreateReq(db *sql.DB,code models.Code,id string) ([]models.Judge0Response,error) {
 
 	sourceCode := readFile(code,id)
 	Id,_ := strconv.Atoi(id)
 	testcases,err := readCases(db,Id)
-
+	var tokens []models.RequestToken
 	if err != nil{
 		return nil,err
 	}
 
-	input := testcases[1].Input
-    expectedOutput := testcases[1].Output
+	for i := range testcases{
+
+	input := testcases[i].Input
+    expectedOutput := testcases[i].Output
 
     requestPayload := models.Judge0Request{
         SourceCode:     sourceCode,
@@ -45,8 +47,7 @@ func CreateReq(db *sql.DB,code models.Code,id string) (*models.RequestToken,erro
 	ApiKey := os.Getenv("JUDGE0_API_KEY")
 	ApiHost := os.Getenv("JUDGE0_API_HOST")
 
-
-	url := "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false&fields=*"
+	url := `https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false&fields=*`
 
 
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
@@ -64,17 +65,26 @@ func CreateReq(db *sql.DB,code models.Code,id string) (*models.RequestToken,erro
 
 	var token models.RequestToken
 	json.Unmarshal(body,&token)
-	return &token,nil;
+	tokens = append(tokens, token)
+}
+	res,err := GetReq(tokens)
+	if err != nil {
+	   return nil,err;
+	}
+	return res,nil;
 }
 
-func GetReq(token *models.RequestToken) (*models.Judge0Response,error){
+func GetReq(tokens []models.RequestToken) ([]models.Judge0Response,error){
 
 	ApiKey := os.Getenv("JUDGE0_API_KEY")
 	ApiHost := os.Getenv("JUDGE0_API_HOST")
+	var responses []models.Judge0Response
 
 	baseUrl := `https://judge0-ce.p.rapidapi.com/submissions/$?base64_encoded=true&fields=*`
 
-	url := strings.Replace(baseUrl,"$",token.Token,1)
+	for i := range tokens{
+
+	url := strings.Replace(baseUrl,"$",tokens[i].Token,1)
 
 	req, _ := http.NewRequest("GET", url, nil)
 
@@ -89,9 +99,11 @@ func GetReq(token *models.RequestToken) (*models.Judge0Response,error){
 	body, _ := io.ReadAll(res.Body)
 
 	var response models.Judge0Response
-	fmt.Println(string(body));
 	json.Unmarshal(body,&response)
-	return &response,nil;
+	responses = append(responses, response)
+	fmt.Println(response.StatusID);
+}
+	return responses,nil;
 }
 
 func encodeBase64(data string) string {

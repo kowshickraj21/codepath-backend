@@ -30,7 +30,7 @@ func ViewProblem(db *sql.DB,pid int) (*models.Problem,error) {
 
 	for i := range testcaseStr{
 		var testcase models.IO
-	json.Unmarshal([]byte(exampleStr[i]),&testcase);
+	json.Unmarshal([]byte(testcaseStr[i]),&testcase);
 	problem.Testcases = append(problem.Testcases,testcase)
 	if err != nil{
 		return nil,err;

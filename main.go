@@ -9,7 +9,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -86,14 +85,7 @@ func main() {
 		var code models.Code
 		ctx.ShouldBindJSON(&code)
 
-		token,err:= controllers.CreateReq(db,code,id);
-		if err != nil {
-			ctx.JSON(500,err);
-		}
-
-		var res *models.Judge0Response
-		time.Sleep(1 * time.Second)
-		res,err = controllers.GetReq(token);
+		res,err:= controllers.CreateReq(db,code,id);
 		if err != nil {
 			ctx.JSON(500,err);
 		}

@@ -15,6 +15,12 @@ type Judge0Response struct {
 	Token          string      `json:"token"`
 	NumberOfRuns   int         `json:"number_of_runs"`
 	CpuTimeLimit   string      `json:"cpu_time_limit"`
+	Status         Status      `json:"status"`
+}
+
+type Status struct {
+	Id          int    `json:"id"`
+	Description string `json:"description"`
 }
 
 type RequestToken struct {

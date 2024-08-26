@@ -112,13 +112,24 @@ func main() {
 	router.GET("/auth/google/callback", func(ctx *gin.Context) {
 		code := ctx.Query("code")
 
-		token,err := controllers.GetUserInfo(db,code)
+		token,err := controllers.HandleGoogleUser(db,code)
 		if err != nil {
 			ctx.JSON(500,err)
 		}
 
 		ctx.JSON(200,token)
 		 
+	})
+
+	router.GET("/auth/github/callback", func(ctx *gin.Context) {
+		code := ctx.Query("code")
+		token,err := controllers.HandleGithubUser(db,code) 
+		fmt.Println("err: ",err)
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(200,token)
 	})
 
 	router.Run(":3050")

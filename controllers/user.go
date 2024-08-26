@@ -8,10 +8,10 @@ import (
 )
 
 
-func CreateUser(db *sql.DB, user models.User) (sql.Result,error) {
+func CreateUser(db *sql.DB, user models.User,provider string) (sql.Result,error) {
 	user.Problems = []int64{}
-	query := `INSERT INTO Users (id,name, email, picture, problems) VALUES ($1, $2, $3, $4, $5)`
-	res,err := db.Exec(query,user.Id, user.Name, user.Email, user.Picture, pq.Array(user.Problems))
+	query := `INSERT INTO Users (name, email, picture, provider, problems) VALUES ($1, $2, $3, $4, $5)`
+	res,err := db.Exec(query, user.Name, user.Email, user.Picture, provider, pq.Array(user.Problems))
 	if err != nil {
 		return nil,err
 	}

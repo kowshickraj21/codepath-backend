@@ -2,45 +2,27 @@ package controllers
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"main/models"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
-func GetUserInfo(db *sql.DB,accessToken string) (string, error) {
-	infoEndpoint := "https://www.googleapis.com/oauth2/v2/userinfo"
-	res, err := http.Get(fmt.Sprintf("%s?access_token=%s", infoEndpoint, accessToken))
-	if err != nil {
-		return "",err
-	}
-	defer res.Body.Close()
-	
-	var userInfo models.User
-	if err := json.NewDecoder(res.Body).Decode(&userInfo); err != nil {
-		return "", err
-	}
+func registerUser(db *sql.DB,userInfo models.User,provider string) {
 
 	user,_:= GetUser(db,userInfo.Email)
 	if(user == nil){
-		CreateUser(db,userInfo)
+		CreateUser(db,userInfo,provider)
+	}else{
+		fmt.Println("Already Exists")
 	}
 
-
-	token,err := SignJWT(&userInfo);
-	if(err != nil) {
-		return "",err;
-	}
-	return token,nil;
 }
 
 func SignJWT(user *models.User)(string,error){
 	claims := jwt.MapClaims{
-		"sub": user.Id,
 		"name": user.Name,
 		"email": user.Email,
 		"iss": "oauth-app-golang",
@@ -69,7 +51,6 @@ func ParseJWT(token string)(*models.User,error){
 	if claims, ok := JWT.Claims.(jwt.MapClaims); ok && JWT.Valid {
 
 		user := &models.User{
-			Id:    claims["sub"].(string),
 			Name:  claims["name"].(string),
 			Email: claims["email"].(string),
 		}

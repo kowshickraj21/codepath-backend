@@ -59,3 +59,15 @@ func ParseJWT(token string)(*models.User,error){
 		return nil, fmt.Errorf("invalid token")
 	}
 }
+
+func GetAuthUser(db *sql.DB,token string) (*models.User,error) {
+	claims,err := ParseJWT(token);
+	if err != nil {
+		return nil,err;
+	}
+	user,err := GetUser(db,claims.Email);
+	if err != nil {
+		return nil,err;
+	}
+	return user,nil;
+}

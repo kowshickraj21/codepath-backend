@@ -39,15 +39,15 @@ func main() {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization","user"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
 
 	router.GET("/user",func(ctx *gin.Context) {
 	 jwt := ctx.Query("token")
-	 fmt.Println(jwt)
-	 user,err := controllers.GetUser(db,jwt)
+
+	 user,err := controllers.GetAuthUser(db,jwt)
 	 if(err != nil){
 		ctx.JSON(500,err);
 	 }
@@ -81,11 +81,11 @@ func main() {
 
 	router.POST("/submit/:problemId",func(ctx *gin.Context) {
 		id := ctx.Param("problemId");
+		jwt := ctx.Request.Header.Get("user")
 
 		var code models.Code
 		ctx.ShouldBindJSON(&code)
-
-		res,err:= controllers.CreateReq(db,code,id);
+		res,err:= controllers.HandleSubmissions(db,code,id,jwt);
 		if err != nil {
 			ctx.JSON(500,err);
 		}

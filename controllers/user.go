@@ -18,16 +18,13 @@ func CreateUser(db *sql.DB, user models.User,provider string) (sql.Result,error)
 	return res,nil
 }
 
-func GetUser(db *sql.DB, token string) (*models.User, error) {
-	authUser,err := ParseJWT(token);
-	if(err != nil){
-		return nil,err
-	}
+func GetUser(db *sql.DB, email string) (*models.User, error) {
+
 	query := `SELECT name, email, picture, problems FROM Users WHERE email = $1`
-	row := db.QueryRow(query, authUser.Email)
+	row := db.QueryRow(query,email)
 
 	var user models.User
-	err = row.Scan(&user.Name, &user.Email, &user.Picture, pq.Array(&user.Problems))
+	err := row.Scan(&user.Name, &user.Email, &user.Picture, pq.Array(&user.Problems))
 
 	if err != nil {
 		return nil, err

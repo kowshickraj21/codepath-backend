@@ -1,14 +1,11 @@
 package controllers
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
+	"main/executers"
 	"main/models"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -17,12 +14,25 @@ import (
 )
 
 
-func CreateReq(db *sql.DB,code models.Code,id string) ([]models.Judge0Response,error) {
+func HandleSubmissions(db *sql.DB,code models.Code,id string,jwt string) ([]models.ResStatus,error) {
+	authUser,err := GetAuthUser(db, jwt)
+	if(authUser == nil){
+		return nil,err
+	}
+	outputs,err := CreateReq(db,code,id)
+	if err != nil {
+		return nil,err;
+	}
 
+	return outputs,nil
+}
+
+func CreateReq(db *sql.DB,code models.Code,id string) ([]models.ResStatus,error) {
+	
 	sourceCode := readFile(code,id)
 	Id,_ := strconv.Atoi(id)
 	testcases,err := readCases(db,Id)
-	var tokens []models.RequestToken
+	var results []models.ResStatus
 	if err != nil{
 		return nil,err
 	}
@@ -30,85 +40,24 @@ func CreateReq(db *sql.DB,code models.Code,id string) ([]models.Judge0Response,e
 	for i := range testcases{
 
 	input := testcases[i].Input
-    expectedOutput := testcases[i].Output
+    output := testcases[i].Output
 
-    requestPayload := models.Judge0Request{
-        SourceCode:     sourceCode,
-        LanguageID:     91,  // HardCoded Java
-        Stdin:          encodeBase64(input),
-        ExpectedOutput: encodeBase64(expectedOutput),
+    payload := models.Req{
+        Code:     sourceCode,
+		Input: input,
+		Output: output,
     }
 
-	jsonData, err := json.Marshal(requestPayload)
-    if err != nil {
-        return nil,err
-    }
-
-	ApiKey := os.Getenv("JUDGE0_API_KEY")
-	ApiHost := os.Getenv("JUDGE0_API_HOST")
-
-	url := `https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false&fields=*`
-
-
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-
-	req.Header.Add("x-rapidapi-key", ApiKey)
-	req.Header.Add("x-rapidapi-host", ApiHost)
-	req.Header.Add("Content-Type", "application/json")
-
-	res, err := http.DefaultClient.Do(req)
+	res,err := executers.JavaExecuter(payload)
 	if err != nil {
-		return nil,err
+		return results,err
 	}
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
-
-	var token models.RequestToken
-	json.Unmarshal(body,&token)
-	tokens = append(tokens, token)
+	results = append(results, res)
 }
-	res,err := GetReq(tokens)
-	if err != nil {
-	   return nil,err;
-	}
-	return res,nil;
+	return results,nil;
 }
 
-func GetReq(tokens []models.RequestToken) ([]models.Judge0Response,error){
 
-	ApiKey := os.Getenv("JUDGE0_API_KEY")
-	ApiHost := os.Getenv("JUDGE0_API_HOST")
-	var responses []models.Judge0Response
-
-	baseUrl := `https://judge0-ce.p.rapidapi.com/submissions/$?base64_encoded=true&fields=*`
-
-	for i := range tokens{
-
-	url := strings.Replace(baseUrl,"$",tokens[i].Token,1)
-
-	req, _ := http.NewRequest("GET", url, nil)
-
-	req.Header.Add("x-rapidapi-key", ApiKey)
-	req.Header.Add("x-rapidapi-host", ApiHost)
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil,err;
-	}
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
-
-	var response models.Judge0Response
-	json.Unmarshal(body,&response)
-	responses = append(responses, response)
-	fmt.Println(response.StatusID);
-}
-	return responses,nil;
-}
-
-func encodeBase64(data string) string {
-    return base64.StdEncoding.EncodeToString([]byte(data))
-}
 
 func readFile(code models.Code,id string) (string){
 	fileurl := "problems/$1/Main.$2.txt"
@@ -121,7 +70,7 @@ func readFile(code models.Code,id string) (string){
 	}
 	boilerplate := string(file)
 	sourceCode := strings.Replace(boilerplate,"$",code.Code,1) 
-	return encodeBase64(sourceCode)
+	return sourceCode
 }
 
 func readCases(db *sql.DB, id int) ([]models.IO, error) {

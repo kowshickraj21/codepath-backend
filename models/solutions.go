@@ -2,7 +2,7 @@ package models
 
 type Solutions struct {
 	Pid      int
-	Username string
+	Email    string
 	Code     string
 	Language string
 }

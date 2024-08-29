@@ -32,29 +32,21 @@ func CreateReq(db *sql.DB,code models.Code,id string) ([]models.ResStatus,error)
 	sourceCode := readFile(code,id)
 	Id,_ := strconv.Atoi(id)
 	testcases,err := readCases(db,Id)
-	var results []models.ResStatus
 	if err != nil{
 		return nil,err
 	}
 
-	for i := range testcases{
-
-	input := testcases[i].Input
-    output := testcases[i].Output
-
-    payload := models.Req{
+	payload := models.Req{
         Code:     sourceCode,
-		Input: input,
-		Output: output,
+		Testcases : testcases,
     }
 
 	res,err := executers.JavaExecuter(payload)
 	if err != nil {
-		return results,err
+		return nil,err
 	}
-	results = append(results, res)
-}
-	return results,nil;
+
+	return res,nil;
 }
 
 

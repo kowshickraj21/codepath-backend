@@ -16,7 +16,6 @@ type Code struct {
 }
 
 type Req struct {
-	Code   string `json:"code"`
-	Input  string `json:"input"`
-	Output string `json:"output"`
+	Code      string `json:"code"`
+	Testcases []IO   `json:"testcases"`
 }

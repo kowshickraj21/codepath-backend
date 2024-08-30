@@ -19,21 +19,25 @@ func HandleSubmissions(db *sql.DB,code models.Code,id string,jwt string) ([]mode
 	if(authUser == nil){
 		return nil,err
 	}
-	outputs,err := CreateReq(db,code,id)
+	outputs,solved,err := CreateReq(db,code,id)
 	if err != nil {
 		return nil,err;
+	}
+	if solved {
+		addSolved(db,authUser.Email,id)
+		newSubmission(db,id,code,authUser.Email)
 	}
 
 	return outputs,nil
 }
 
-func CreateReq(db *sql.DB,code models.Code,id string) ([]models.ResStatus,error) {
+func CreateReq(db *sql.DB,code models.Code,id string) ([]models.ResStatus,bool,error) {
 	
 	sourceCode := readFile(code,id)
 	Id,_ := strconv.Atoi(id)
 	testcases,err := readCases(db,Id)
 	if err != nil{
-		return nil,err
+		return nil,false,err
 	}
 
 	payload := models.Req{
@@ -41,15 +45,13 @@ func CreateReq(db *sql.DB,code models.Code,id string) ([]models.ResStatus,error)
 		Testcases : testcases,
     }
 
-	res,err := executers.JavaExecuter(payload)
+	res,solved,err := executers.JavaExecuter(payload)
 	if err != nil {
-		return nil,err
+		return nil,false,err
 	}
 
-	return res,nil;
+	return res,solved,nil;
 }
-
-
 
 func readFile(code models.Code,id string) (string){
 	fileurl := "problems/$1/Main.$2.txt"

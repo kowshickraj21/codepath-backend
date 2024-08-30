@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"main/models"
 	"strconv"
@@ -9,28 +10,57 @@ import (
 	"github.com/lib/pq"
 )
 
-func newSubmission(db *sql.DB,submission models.Solutions) (error) {
-	query := `INSERT INTO Solutions VALUES ($1,$2,$3,$4)`
-	_,err := db.Exec(query,submission.Pid,submission.Email,submission.Code,submission.Language);
+func HandleSolutions(db *sql.DB, id int, jwt string) ([]models.Solutions,error){
+	authUser,err := GetAuthUser(db, jwt)
+	if err != nil {
+		return nil,err
+	}
+	solutions,err := getSubmission(db,id,authUser.Email)
+	if err != nil {
+		return nil,err
+	}
+	return solutions,nil
+}
+
+
+
+func newSubmission(db *sql.DB,id string,code models.Code,email string) (error) {
+	Pid ,_ := strconv.Atoi(id)
+	encodedCode := base64.StdEncoding.EncodeToString([]byte(code.Code))
+	query := `INSERT INTO Solutions (Pid, Email, Code, Language) VALUES ($1,$2,$3,$4)`
+	_,err := db.Exec(query,Pid,email,encodedCode,code.Language);
 	if(err != nil){
 		return err
 	}
 	return nil
 }
 
-func getSubmission(db *sql.DB,pid int,username string,language string) (*models.Solutions,error) {
-	query := `SELECT * FROM Solutions WHERE pid = $1 AND username = $2 AND language = $3`
-	rows,err := db.Query(query,pid,username,language);
+
+
+func getSubmission(db *sql.DB,pid int,email string) ([]models.Solutions,error) {
+	query := `SELECT * FROM Solutions WHERE pid = $1 AND email = $2`
+	rows,err := db.Query(query,pid,email);
 	if(err != nil){
 		return nil,err
 	}
-	var submission models.Solutions
-	err = rows.Scan(&submission.Pid,&submission.Email,&submission.Code,&submission.Language)
-	if err != nil {
-		return nil,err;
-	}
-	return &submission,nil
+	defer rows.Close()
+
+	var submissions []models.Solutions
+	for rows.Next() {
+	    var submission models.Solutions
+	    err = rows.Scan(&submission.Sid,&submission.Pid,&submission.Email,&submission.Code,&submission.Language)
+		if err != nil {
+			return nil,err
+		}
+		decodedCode,_ := base64.StdEncoding.DecodeString(submission.Code)
+
+		submission.Code = string(decodedCode)
+	    submissions = append(submissions, submission)
+    }
+	return submissions,nil
 }
+
+
 
 func addSolved(db *sql.DB, email string,pid string) (error) {
 	Pid,_ := strconv.Atoi(pid)
@@ -49,8 +79,8 @@ func addSolved(db *sql.DB, email string,pid string) (error) {
 		}
 	}
 
-	addQuery := `UPDATE Users SET problems = problems || $1 WHERE email = $2`
-	_,err = db.Exec(addQuery,pq.Array([]int{Pid}),email);
+	addQuery := `UPDATE Users SET problems = array_append(problems, $1) WHERE email = $2`
+	_,err = db.Exec(addQuery,Pid,email);
 	if(err != nil){
 		fmt.Println("ERR2 : ",err)
 		return err

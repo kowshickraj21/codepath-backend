@@ -70,11 +70,25 @@ func main() {
 		ctx.JSON(200,problem);
 	})
 
+	router.GET("/submission/:problemId", func(ctx *gin.Context) {
+		idstr := ctx.Param("problemId");
+		id,err := strconv.Atoi(idstr)
+		if err != nil {
+			ctx.JSON(500,err);
+			return
+		}
+		jwt := ctx.Request.Header.Get("user")
+
+		solutions,err := controllers.HandleSolutions(db,id,jwt)
+		ctx.JSON(200,solutions)
+	})
+
 	router.GET("/problems", func(ctx *gin.Context) {
 		
 		problems,err := controllers.FetchProblems(db);
 		if err != nil {
 			ctx.JSON(500,err);
+			return
 		}
 		ctx.JSON(200,problems);
 	})
@@ -88,6 +102,7 @@ func main() {
 		res,err:= controllers.HandleSubmissions(db,code,id,jwt);
 		if err != nil {
 			ctx.JSON(500,err);
+			return
 		}
 		ctx.JSON(200,res);
 	})
@@ -103,6 +118,7 @@ func main() {
 		file,err := os.ReadFile(fileurl)
 		if err != nil {
 			ctx.JSON(500,err);
+			return
 		}
 		boilerplate := string(file)
 		fmt.Println(boilerplate)
@@ -115,6 +131,7 @@ func main() {
 		token,err := controllers.HandleGoogleUser(db,code)
 		if err != nil {
 			ctx.JSON(500,err)
+			return
 		}
 
 		ctx.JSON(200,token)

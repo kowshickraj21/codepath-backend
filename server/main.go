@@ -107,6 +107,20 @@ func main() {
 		ctx.JSON(200,res);
 	})
 
+	router.POST("/run/:problemId",func(ctx *gin.Context) {
+		id := ctx.Param("problemId");
+		jwt := ctx.Request.Header.Get("user")
+
+		var code models.Code
+		ctx.ShouldBindJSON(&code)
+		res,err:= controllers.HandleRun(db,code,id,jwt);
+		if err != nil {
+			ctx.JSON(500,err);
+			return
+		}
+		ctx.JSON(200,res);
+	})
+	
 	router.GET("/code/:problemId/:language",func(ctx *gin.Context) {
 		id := ctx.Param("problemId");
 		language := ctx.Param("language");

@@ -19,25 +19,38 @@ func HandleSubmissions(db *sql.DB,code models.Code,id string,jwt string) ([]mode
 	if(authUser == nil){
 		return nil,err
 	}
-	outputs,solved,err := CreateReq(db,code,id)
+	outputs,passed,err := CreateReq(db,code,id,6)
 	if err != nil {
 		return nil,err;
 	}
-	if solved {
+	if  passed != -1 {
 		addSolved(db,authUser.Email,id)
-		newSubmission(db,id,code,authUser.Email)
+		newSubmission(db,id,code,authUser.Email,string(passed))
 	}
 
 	return outputs,nil
 }
 
-func CreateReq(db *sql.DB,code models.Code,id string) ([]models.ResStatus,bool,error) {
+func HandleRun(db *sql.DB,code models.Code,id string,jwt string) ([]models.ResStatus,error) {
+	authUser,err := GetAuthUser(db, jwt)
+	if(authUser == nil){
+		return nil,err
+	}
+	outputs,_,err := CreateReq(db,code,id,2)
+	if err != nil {
+		return nil,err;
+	}
+
+	return outputs,nil
+}
+
+func CreateReq(db *sql.DB,code models.Code,id string,cases int) ([]models.ResStatus,int,error) {
 	
 	sourceCode := readFile(code,id)
 	Id,_ := strconv.Atoi(id)
 	testcases,err := readCases(db,Id)
 	if err != nil{
-		return nil,false,err
+		return nil,-1,err
 	}
 
 	payload := models.Req{
@@ -45,9 +58,9 @@ func CreateReq(db *sql.DB,code models.Code,id string) ([]models.ResStatus,bool,e
 		Testcases : testcases,
     }
 
-	res,solved,err := executers.JavaExecuter(payload)
+	res,solved,err := executers.JavaExecuter(payload,cases)
 	if err != nil {
-		return nil,false,err
+		return nil,-1,err
 	}
 
 	return res,solved,nil;

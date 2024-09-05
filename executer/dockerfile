@@ -1,0 +1,32 @@
+# First stage: build the Go application
+FROM golang:1.19-alpine AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the Go Modules manifests
+COPY go.mod ./
+
+# Download the Go module dependencies
+RUN go mod download
+
+# Copy the source code into the container
+COPY . .
+
+# Build the Go app
+RUN go build -o executer .
+
+# Second stage: create the final runtime image
+FROM openjdk:11-jre-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the compiled Go binary from the builder stage
+COPY --from=builder /app/executer /app/executer
+
+# Expose port 8080 to the outside world
+EXPOSE 8080
+
+# Command to run the executable
+CMD ["./executer"]

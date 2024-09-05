@@ -24,11 +24,18 @@ func HandleSolutions(db *sql.DB, id int, jwt string) ([]models.Solutions,error){
 
 
 
-func newSubmission(db *sql.DB,id string,code models.Code,email string) (error) {
+func newSubmission(db *sql.DB,id string,code models.Code,email string,passed string) (error) {
 	Pid ,_ := strconv.Atoi(id)
+	solved,_ := strconv.Atoi(passed)
+	var status string
+	if solved == 6 {
+		status = "Accepted"
+	}else{
+		status = "Rejected"
+	}
 	encodedCode := base64.StdEncoding.EncodeToString([]byte(code.Code))
-	query := `INSERT INTO Solutions (Pid, Email, Code, Language) VALUES ($1,$2,$3,$4)`
-	_,err := db.Exec(query,Pid,email,encodedCode,code.Language);
+	query := `INSERT INTO Solutions (Pid, Email, Code, Language,Status) VALUES ($1,$2,$3,$4,$5)`
+	_,err := db.Exec(query,Pid,email,encodedCode,code.Language,status);
 	if(err != nil){
 		return err
 	}
@@ -48,7 +55,7 @@ func getSubmission(db *sql.DB,pid int,email string) ([]models.Solutions,error) {
 	var submissions []models.Solutions
 	for rows.Next() {
 	    var submission models.Solutions
-	    err = rows.Scan(&submission.Sid,&submission.Pid,&submission.Email,&submission.Code,&submission.Language)
+	    err = rows.Scan(&submission.Sid,&submission.Pid,&submission.Email,&submission.Code,&submission.Language,&submission.Status)
 		if err != nil {
 			return nil,err
 		}

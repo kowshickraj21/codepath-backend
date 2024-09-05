@@ -6,4 +6,5 @@ type Solutions struct {
 	Email    string
 	Code     string
 	Language string
+	Status   string
 }

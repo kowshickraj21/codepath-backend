@@ -7,16 +7,16 @@ import (
 	"os/exec"
 )
 
-func JavaExecuter (req models.Req) ([]models.ResStatus,bool,error) {
+func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 
 	sourceFileName := "Main.java"
 	inputFileName := "input.txt"
 	var res []models.ResStatus
-	solved := true
+	solved := 0
 
 	
 	if err := ioutil.WriteFile(sourceFileName, []byte(req.Code), 0644); err != nil {
-		solved = false
+		solved = -1
 		return nil,solved,err
 	}
 	defer os.Remove(sourceFileName) 
@@ -24,11 +24,11 @@ func JavaExecuter (req models.Req) ([]models.ResStatus,bool,error) {
 	compileCmd := exec.Command("javac", sourceFileName)
 	_, err := compileCmd.CombinedOutput()
 	if err != nil {
-		solved = false
+		solved = -1
 		return nil,solved,err
 	}
 
-	for i := range req.Testcases{
+	for i := 0;i < cases;i++{
 		input := req.Testcases[i].Input
 		output := req.Testcases[i].Output
 
@@ -36,7 +36,7 @@ func JavaExecuter (req models.Req) ([]models.ResStatus,bool,error) {
 
 		if input != "" {
 			if err := ioutil.WriteFile(inputFileName, []byte(input), 0644); err != nil {
-				solved = false
+				solved = -1
 				return nil,solved,err
 			}
 		}
@@ -52,7 +52,7 @@ func JavaExecuter (req models.Req) ([]models.ResStatus,bool,error) {
 		runOutput, err := runCmd.CombinedOutput()
 		if err != nil {
 			out.Id = 4
-			solved = false
+			solved = -1;
 			out.Description = string(runOutput)
 			return nil,solved,err
 		}
@@ -60,10 +60,10 @@ func JavaExecuter (req models.Req) ([]models.ResStatus,bool,error) {
 
 
 		if(string(runOutput) == output){
+			solved += 1;
 			out.Id = 1
 			out.Description = "Accepted"
 		}else{
-			solved = false
 			out.Id = 2
 			out.Description = "Rejected"
 		}

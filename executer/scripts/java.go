@@ -36,6 +36,7 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 	 
 		input := strings.ReplaceAll(req.Testcases[i].Input,"n","\n")
 		output := req.Testcases[i].Output
+		fmt.Println("/",output,"/")	
 		var out models.ResStatus
 
 		if input != "" {
@@ -64,8 +65,8 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 		}
 		defer os.Remove("Main.class") 
 
-		fmt.Println(string(runOutput))
-		if(string(runOutput) == output){
+		fmt.Println("/",string(runOutput),"/")
+		if(strings.Trim(string(runOutput)," ") == (strings.Trim(output," "))){
 
 			solved += 1;
 			out.Id = 1

@@ -1,0 +1,39 @@
+#include <iostream>
+#include <vector>
+#include <sstream>
+using namespace std;
+
+class Solution {
+public:
+    $
+};
+
+int main() {
+    string input, targetInput;
+    getline(cin, input);        // Example: "2,7,11,15"
+    getline(cin, targetInput);  // Example: "9"
+
+    // Split the input string by commas to get individual numbers
+    vector<int> nums;
+    stringstream ss(input);
+    string temp;
+    while (getline(ss, temp, ',')) {
+        nums.push_back(stoi(temp));
+    }
+
+    // Parse the target string into an integer
+    int target = stoi(targetInput);
+
+    // Create an instance of the Solution class
+    Solution solution;
+
+    // Call the twoSum method
+    vector<int> out = solution.twoSum(nums, target);
+
+    // Print the output
+    for (int i = 0; i < out.size(); i++) {
+        cout << out[i] << " ";
+    }
+
+    return 0;
+}

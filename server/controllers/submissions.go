@@ -25,7 +25,7 @@ func HandleSubmissions(db *sql.DB,code models.Code,id string,jwt string) ([]mode
 	}
 	if  passed != -1 {
 		// addSolved(db,authUser.Email,id)
-		// newSubmission(db,id,code,authUser.Email,string(passed))
+		newSubmission(db,id,code,authUser.Email,string(passed))
 	}
 
 	return outputs,nil
@@ -58,7 +58,13 @@ func CreateReq(db *sql.DB,code models.Code,id string,cases int) ([]models.ResSta
 		Testcases : testcases,
     }
 
-	res,solved,err := executers.CppExecuter(payload,cases)
+	var res []models.ResStatus
+	var solved int 
+	if code.Language == "java"{
+		res,solved,err = executers.JavaExecuter(payload,cases)
+	}else if(code.Language == "cpp"){
+		res,solved,err = executers.CppExecuter(payload,cases)
+	}
 	if err != nil {
 		return nil,-1,err
 	}

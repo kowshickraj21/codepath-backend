@@ -17,15 +17,21 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
 		cases := len(req.Testcases)
-		res, solved, err := scripts.JavaExecuter(req, cases)
+		var res []models.ResStatus
+		var solved int
+		if req.Language == "java"{
+		    res, solved, err = scripts.JavaExecuter(req, cases)
+		}else if req.Language == "cpp" {
+		    res, solved, err = scripts.CppExecuter(req, cases)
+		}else{
+			http.Error(w, "Invalid Language", http.StatusBadRequest)
+		}
 		if err != nil {
 		    fmt.Println("Error",err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Println("res",res)
 		resp := models.Response{
 			Results: res,
 			Solved:  solved,

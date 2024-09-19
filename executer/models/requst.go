@@ -3,6 +3,7 @@ package models
 type Req struct {
 	Code      string `json:"code"`
 	Testcases []IO   `json:"testcases"`
+	Language  string `json:"language"`
 }
 
 type IO struct {

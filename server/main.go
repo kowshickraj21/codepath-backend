@@ -101,7 +101,7 @@ func main() {
 		ctx.ShouldBindJSON(&code)
 		res,err:= controllers.HandleSubmissions(db,code,id,jwt);
 		if err != nil {
-			ctx.JSON(500,err);
+			ctx.JSON(500, err.Error())
 			return
 		}
 		ctx.JSON(200,res);

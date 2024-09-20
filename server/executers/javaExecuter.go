@@ -1,6 +1,7 @@
 package executers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"main/models"
 	"os"
@@ -22,11 +23,12 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 	defer os.Remove(sourceFileName) 
 
 	compileCmd := exec.Command("javac", sourceFileName)
-	_, err := compileCmd.CombinedOutput()
+	Cout, err := compileCmd.CombinedOutput()
 	if err != nil {
 		solved = -1
-		return nil,solved,err
+		return nil,solved, fmt.Errorf("Compilation Error: %s", string(Cout))
 	}
+	
 
 	for i := 0;i < cases;i++{
 		input := req.Testcases[i].Input
@@ -51,10 +53,7 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 	
 		runOutput, err := runCmd.CombinedOutput()
 		if err != nil {
-			out.Id = 4
-			solved = -1;
-			out.Description = string(runOutput)
-			return nil,solved,err
+			return nil,solved,fmt.Errorf("Runtime Error: %s", string(runOutput))
 		}
 		defer os.Remove("Main.class") 
 

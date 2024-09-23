@@ -1,0 +1,18 @@
+import java.util.*;
+
+public class Main{
+
+    $
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String input = sc.nextLine();  
+        sc.close();
+
+        int num = Integer.parseInt(input.trim());
+
+        boolean out = isPalindrome(num);
+
+        System.out.print(out);
+    }
+}

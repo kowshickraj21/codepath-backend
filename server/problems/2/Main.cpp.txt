@@ -1,0 +1,19 @@
+#include <iostream>
+#include <string>
+
+class Solution {
+public:
+    $
+};
+
+int main() {
+    int num;
+    std::cin >> num;  
+
+    Solution sol;
+    bool out = sol.isPalindrome(num);
+    
+    std::cout << (out ? "true" : "false"); 
+    
+    return 0;
+}

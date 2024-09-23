@@ -6,26 +6,21 @@ public class Main{
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        String input = sc.nextLine(); // Example: "2,7,11,15"
-        String targetInput = sc.nextLine(); // Example: "9"
+        String input = sc.nextLine(); 
+        String targetInput = sc.nextLine(); 
         sc.close();
 
-        // Split the input string by commas to get individual numbers
         String[] inputString = input.split(",");
         int[] nums = new int[inputString.length];
 
-        // Parse each string number into an integer
         for (int i = 0; i < inputString.length; i++) {
             nums[i] = Integer.parseInt(inputString[i].trim());
         }
 
-        // Parse the target string into an integer
         int target = Integer.parseInt(targetInput.trim());
 
-        // Call the twoSum method (assumed to be provided by the user)
         int[] out = twoSum(nums, target);
 
-        // Print the output
         for (int i = 0; i < out.length; i++) {
             System.out.print(out[i] + " ");
         }

@@ -26,7 +26,7 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 	Cout, err := compileCmd.CombinedOutput()
 	if err != nil {
 		solved = -1
-		return nil,solved, fmt.Errorf("Compilation Error: %s", string(Cout))
+		return nil,solved, fmt.Errorf("compilation error: %s", string(Cout))
 	}
 	
 
@@ -53,7 +53,7 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 	
 		runOutput, err := runCmd.CombinedOutput()
 		if err != nil {
-			return nil,solved,fmt.Errorf("Runtime Error: %s", string(runOutput))
+			return nil,solved,fmt.Errorf("runtime error: %s", string(runOutput))
 		}
 		defer os.Remove("Main.class") 
 

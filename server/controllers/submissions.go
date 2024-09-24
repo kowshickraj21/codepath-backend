@@ -1,11 +1,15 @@
 package controllers
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"main/executers"
+	"io"
+
 	"main/models"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +19,7 @@ import (
 
 
 func HandleSubmissions(db *sql.DB,code models.Code,id string,jwt string) ([]models.ResStatus,error) {
+	var outputs models.Response
 	authUser,err := GetAuthUser(db, jwt)
 	if(authUser == nil){
 		return nil,err
@@ -28,46 +33,61 @@ func HandleSubmissions(db *sql.DB,code models.Code,id string,jwt string) ([]mode
 		newSubmission(db,id,code,authUser.Email,string(passed))
 	}
 
-	return outputs,nil
+	return outputs.Results,nil
 }
 
-func HandleRun(db *sql.DB,code models.Code,id string,jwt string) ([]models.ResStatus,error) {
+func HandleRun(db *sql.DB,code models.Code,id string,jwt string) (models.Response,error) {
+	var outputs models.Response
 	authUser,err := GetAuthUser(db, jwt)
 	if(authUser == nil){
-		return nil,err
+		return outputs,err
 	}
-	outputs,_,err := CreateReq(db,code,id,2)
+	outputs,_,err = CreateReq(db,code,id,2)
 	if err != nil {
-		return nil,err;
+		return outputs,err;
 	}
 
 	return outputs,nil
 }
 
-func CreateReq(db *sql.DB,code models.Code,id string,cases int) ([]models.ResStatus,int,error) {
+func CreateReq(db *sql.DB,code models.Code,id string,cases int) (models.Response,int,error) {
 	
 	sourceCode := readFile(code,id)
 	Id,_ := strconv.Atoi(id)
 	testcases,err := readCases(db,Id)
+
+	var res models.Response
+
 	if err != nil{
-		return nil,-1,err
+		return res,-1,err
 	}
 
 	payload := models.Req{
         Code:     sourceCode,
 		Testcases : testcases,
+		Language : code.Language,
     }
 
-	var res []models.ResStatus
 	var solved int 
-	if code.Language == "java"{
-		res,solved,err = executers.JavaExecuter(payload,cases)
-	}else if(code.Language == "cpp"){
-		res,solved,err = executers.CppExecuter(payload,cases)
-	}
+	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		return nil,-1,err
+		fmt.Println("Error marshalling JSON:", err)
+		return res,0,err
 	}
+
+	resp, err := http.Post("http://localhost:8800/execute", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return res,0,err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200{
+	errBody,_ := io.ReadAll(resp.Body)
+	return res,0,errors.New(string(errBody))
+	}
+	
+	json.NewDecoder(resp.Body).Decode(&res)
 
 	return res,solved,nil;
 }

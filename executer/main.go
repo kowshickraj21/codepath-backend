@@ -39,6 +39,6 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	})
-	fmt.Println("Server is running on port 8080")
+	fmt.Println("Server is running on port 8800")
 	log.Fatal(http.ListenAndServe(":8800", nil))
 }

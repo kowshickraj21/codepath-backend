@@ -1,6 +1,7 @@
 package scripts
 
 import (
+	"fmt"
 	"io/ioutil"
 	"main/models"
 	"os"
@@ -14,19 +15,16 @@ func CppExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
 	var res []models.ResStatus
 	solved := 0
 
-	// Write the C++ code to a file
 	if err := ioutil.WriteFile(sourceFileName, []byte(req.Code), 0644); err != nil {
 		solved = -1
 		return nil, solved, err
 	}
-	defer os.Remove(sourceFileName) // Clean up the source file afterward
-
-	// Compile the C++ code
+	defer os.Remove(sourceFileName) 
 	compileCmd := exec.Command("g++", "-o", "main", sourceFileName)
-	_, err := compileCmd.CombinedOutput()
+	compileOut, err := compileCmd.CombinedOutput()
 	if err != nil {
 		solved = -1
-		return nil, solved, err
+		return nil, solved, fmt.Errorf("compilation error: %s",string(compileOut))
 	}
 
 	for i := 0; i < cases; i++ {
@@ -35,8 +33,7 @@ func CppExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
 
 		var out models.ResStatus
 
-		// If input is provided, write it to the input file
-		if input != "" {
+			if input != "" {	
 			if err := ioutil.WriteFile(inputFileName, []byte(input), 0644); err != nil {
 				solved = -1
 				return nil, solved, err
@@ -44,7 +41,6 @@ func CppExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
 		}
 
 		var runCmd *exec.Cmd
-		// Execute the compiled program, pass input if available
 		if input != "" {
 			runCmd = exec.Command("./main")
 			runCmd.Stdin, _ = os.Open(inputFileName)
@@ -52,17 +48,12 @@ func CppExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
 			runCmd = exec.Command("./main")
 		}
 
-		// Capture the program's output
 		runOutput, err := runCmd.CombinedOutput()
 		if err != nil {
-			out.Id = 4
-			solved = -1
-			out.Description = string(runOutput)
-			return nil, solved, err
+			return nil, solved, fmt.Errorf("runtime error: %s",string(runOutput))
 		}
-		defer os.Remove("main") // Clean up the compiled binary afterward
+		defer os.Remove("main") 
 
-		// Check if the program output matches the expected output
 		if string(runOutput) == output {
 			solved += 1
 			out.Id = 1

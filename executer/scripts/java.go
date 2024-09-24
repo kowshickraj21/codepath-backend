@@ -6,7 +6,6 @@ import (
 	"main/models"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
@@ -15,34 +14,31 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 	inputFileName := "input.txt"
 	var res []models.ResStatus
 	solved := 0
+
 	
 	if err := ioutil.WriteFile(sourceFileName, []byte(req.Code), 0644); err != nil {
 		solved = -1
-		fmt.Println("Error",err)
 		return nil,solved,err
 	}
 	defer os.Remove(sourceFileName) 
 
-
 	compileCmd := exec.Command("javac", sourceFileName)
-	_, err := compileCmd.CombinedOutput()
+	Cout, err := compileCmd.CombinedOutput()
 	if err != nil {
 		solved = -1
-		fmt.Println("Error",err)
-		return nil,solved,err
+		return nil,solved, fmt.Errorf("compilation error: %s", string(Cout))
 	}
+	
 
 	for i := 0;i < cases;i++{
-	 
-		input := strings.ReplaceAll(req.Testcases[i].Input,"n","\n")
+		input := req.Testcases[i].Input
 		output := req.Testcases[i].Output
-		fmt.Println("/",output,"/")	
+
 		var out models.ResStatus
 
 		if input != "" {
 			if err := ioutil.WriteFile(inputFileName, []byte(input), 0644); err != nil {
 				solved = -1
-				fmt.Println("Error",err)
 				return nil,solved,err
 			}
 		}
@@ -57,17 +53,12 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 	
 		runOutput, err := runCmd.CombinedOutput()
 		if err != nil {
-			out.Id = 4
-			solved = -1;
-			fmt.Println("Error",err)
-			out.Description = string(runOutput)
-			return nil,solved,err
+			return nil,solved,fmt.Errorf("runtime error: %s", string(runOutput))
 		}
 		defer os.Remove("Main.class") 
 
-		fmt.Println("/",string(runOutput),"/")
-		if(strings.Trim(string(runOutput)," ") == (strings.Trim(output," "))){
 
+		if(string(runOutput) == output){
 			solved += 1;
 			out.Id = 1
 			out.Description = "Accepted"
@@ -78,7 +69,7 @@ func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
 		res = append(res, out)
 	}
 	
-	fmt.Println("Res",res)
+
 	return res,solved,nil
 }
 

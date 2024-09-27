@@ -1,11 +1,13 @@
 package models
 
 type Problem struct {
-	Pid         int
-	Title       string
-	Description string
-	Examples    []IO
-	Testcases   []IO
+	Pid         int      `json:"pid"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Examples    []IO     `json:"examples"`
+	Testcases   []IO     `json:"testcases"`
+	Difficulty  string   `json:"difficulty"`
+	Tags        []string `json:"tags"`
 }
 
 type IO struct {

@@ -16,7 +16,7 @@ func ViewProblem(db *sql.DB,pid int) (*models.Problem,error) {
 	var problem models.Problem
 	var exampleStr [] string
 	var testcaseStr [] string
-	err := row.Scan(&problem.Pid,&problem.Title,&problem.Description,pq.Array(&exampleStr),pq.Array(&testcaseStr));
+	err := row.Scan(&problem.Pid,&problem.Title,&problem.Description,pq.Array(&exampleStr),pq.Array(&testcaseStr),&problem.Difficulty,pq.Array(&problem.Tags));
 	
 
 	for i := range exampleStr{
@@ -30,8 +30,8 @@ func ViewProblem(db *sql.DB,pid int) (*models.Problem,error) {
 
 	for i := range testcaseStr{
 		var testcase models.IO
-	json.Unmarshal([]byte(testcaseStr[i]),&testcase);
-	problem.Testcases = append(problem.Testcases,testcase)
+		json.Unmarshal([]byte(testcaseStr[i]),&testcase);
+		problem.Testcases = append(problem.Testcases,testcase)
 	if err != nil{
 		return nil,err;
 	}
@@ -42,7 +42,7 @@ func ViewProblem(db *sql.DB,pid int) (*models.Problem,error) {
 
 
 func FetchProblems(db *sql.DB) ([]models.Problem, error) {
-	query := `SELECT pid, title FROM problems`
+	query := `SELECT pid, title, difficulty, tags FROM problems`
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,8 @@ func FetchProblems(db *sql.DB) ([]models.Problem, error) {
 	for rows.Next() {
 
 		var problem models.Problem
-		err := rows.Scan(&problem.Pid, &problem.Title)
+		err := rows.Scan(&problem.Pid, &problem.Title, &problem.Difficulty, pq.Array(&problem.Tags))
+		
 		problems = append(problems, problem)
 		
 	if err != nil {

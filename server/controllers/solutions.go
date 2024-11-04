@@ -71,23 +71,23 @@ func getSubmission(db *sql.DB,pid int,email string) ([]models.Solutions,error) {
 
 func addSolved(db *sql.DB, email string,pid string) (error) {
 	Pid,_ := strconv.Atoi(pid)
-	var solved []int
+	var solved pq.Int64Array
 	getQuery := `SELECT problems FROM Users WHERE email = $1`
-	err := db.QueryRow(getQuery, email).Scan(pq.Array(&solved))
+	err := db.QueryRow(getQuery, email).Scan(&solved)
 	if err != nil {
 		fmt.Println("ERR : ",err)
 		return err;
 	}
-	fmt.Println("Problems: ",solved)
+
 	for i := range solved {
-		if(solved[i] == Pid){
+		if(solved[i] == int64(Pid)){
 			fmt.Println("Already Exists")
 			return nil;
 		}
 	}
 
 	addQuery := `UPDATE Users SET problems = array_append(problems, $1) WHERE email = $2`
-	_,err = db.Exec(addQuery,Pid,email);
+	_,err = db.Exec(addQuery,int64(Pid),email);
 	if(err != nil){
 		fmt.Println("ERR2 : ",err)
 		return err

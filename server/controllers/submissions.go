@@ -28,8 +28,10 @@ func HandleSubmissions(db *sql.DB,code models.Code,id string,jwt string) ([]mode
 	if err != nil {
 		return nil,err;
 	}
+	if passed == 6 {
+		addSolved(db,authUser.Email,id)
+	}
 	if  passed != -1 {
-		// addSolved(db,authUser.Email,id)
 		newSubmission(db,id,code,authUser.Email,string(passed))
 	}
 

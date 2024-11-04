@@ -50,6 +50,7 @@ func main() {
 	 user,err := controllers.GetAuthUser(db,jwt)
 	 if(err != nil){
 		ctx.JSON(500,err);
+		return;
 	 }
 	 ctx.JSON(200,user);
 	 

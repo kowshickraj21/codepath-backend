@@ -1,75 +1,85 @@
 package scripts
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
 	"main/models"
 	"os"
 	"os/exec"
+	"sync"
 )
 
-func JavaExecuter (req models.Req,cases int) ([]models.ResStatus,int,error) {
-
+func JavaExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
 	sourceFileName := "Main.java"
-	inputFileName := "input.txt"
 	var res []models.ResStatus
 	solved := 0
 
-	
-	if err := ioutil.WriteFile(sourceFileName, []byte(req.Code), 0644); err != nil {
+	if err := os.WriteFile(sourceFileName, []byte(req.Code), 0644); err != nil {
 		solved = -1
-		return nil,solved,err
+		return nil, solved, err
 	}
-	defer os.Remove(sourceFileName) 
+	defer os.Remove(sourceFileName)
 
 	compileCmd := exec.Command("javac", sourceFileName)
 	Cout, err := compileCmd.CombinedOutput()
 	if err != nil {
 		solved = -1
-		return nil,solved, fmt.Errorf("compilation error: %s", string(Cout))
+		return nil, solved, fmt.Errorf("compilation error: %s", string(Cout))
 	}
-	
+	defer os.Remove("Main.class")
+	os.Remove(sourceFileName)
 
-	for i := 0;i < cases;i++{
-		input := req.Testcases[i].Input
-		output := req.Testcases[i].Output
+	results := make(chan models.ResStatus, cases)
+
+	var wg sync.WaitGroup
+
+	runTestCase := func(index int) {
+		defer wg.Done()
+
+		input := req.Testcases[index].Input
+		output := req.Testcases[index].Output
 
 		var out models.ResStatus
 
+		runCmd := exec.Command("java", "Main")
+
 		if input != "" {
-			if err := ioutil.WriteFile(inputFileName, []byte(input), 0644); err != nil {
-				solved = -1
-				return nil,solved,err
-			}
+			runCmd.Stdin = bytes.NewBufferString(input)
 		}
-		
-		var runCmd *exec.Cmd
-		if input != "" {
-			runCmd = exec.Command("java", "Main")
-			runCmd.Stdin, _ = os.Open(inputFileName) 
-		} else {
-			runCmd = exec.Command("java", "Main")
-		}
-	
+
 		runOutput, err := runCmd.CombinedOutput()
 		if err != nil {
-			return nil,solved,fmt.Errorf("runtime error: %s", string(runOutput))
+			out.Id = 2
+			out.Description = fmt.Sprintf("runtime error: %s", string(runOutput))
+			results <- out
+			return
 		}
-		defer os.Remove("Main.class") 
 
-
-		if(string(runOutput) == output){
-			solved += 1;
+		if string(runOutput) == output {
 			out.Id = 1
 			out.Description = "Accepted"
-		}else{
+			solved++
+		} else {
 			out.Id = 2
 			out.Description = "Rejected"
 		}
-		res = append(res, out)
+
+		results <- out
 	}
-	
 
-	return res,solved,nil
+	for i := 0; i < cases; i++ {
+		wg.Add(1)
+		go runTestCase(i)
+	}
+
+	wg.Wait()
+	close(results)
+
+	defer os.Remove("Main.class")
+
+	for result := range results {
+		res = append(res, result)
+	}
+
+	return res, solved, nil
 }
-

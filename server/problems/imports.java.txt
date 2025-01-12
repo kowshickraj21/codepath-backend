@@ -1,0 +1,38 @@
+// Core Java
+import java.util.*;               // Collections, utilities, and Scanner
+import java.io.*;                 // Input/Output streams
+import java.math.*;               // BigInteger and BigDecimal for precise calculations
+
+// Data Structures
+import java.util.ArrayList;       // Dynamic array
+import java.util.LinkedList;      // Linked list
+import java.util.HashMap;         // Hash table
+import java.util.HashSet;         // Hash set
+import java.util.TreeMap;         // Sorted map
+import java.util.TreeSet;         // Sorted set
+import java.util.PriorityQueue;   // Heap-based priority queue
+import java.util.Stack;           // Stack
+import java.util.Queue;           // Queue
+import java.util.Deque;           // Double-ended queue
+
+// Math and Algorithms
+import java.util.Arrays;          // Array utilities (e.g., sorting, binary search)
+import java.math.BigInteger;      // Arbitrary-precision integer
+import java.math.BigDecimal;      // Arbitrary-precision decimal
+
+// Input/Output
+import java.io.BufferedReader;    // Efficient input reading
+import java.io.InputStreamReader; // Standard input reading
+import java.io.PrintWriter;       // Efficient output writing
+import java.io.IOException;       // Exception handling for I/O
+
+// Strings
+import java.lang.String;          // String class (implicitly available)
+import java.lang.StringBuilder;   // Mutable strings
+import java.lang.StringBuffer;    // Thread-safe mutable strings
+import java.util.regex.*;         // Regular expressions for pattern matching
+
+// Objects and Utilities
+import java.util.Objects;         // Utility methods for objects
+import java.util.Collections;     // Algorithms for collection manipulation
+import java.util.Comparator;      // Custom comparison for sorting

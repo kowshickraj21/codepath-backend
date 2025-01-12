@@ -98,13 +98,19 @@ func readFile(code models.Code,id string) (string){
 	fileurl := "problems/$1/Main.$2.txt"
 	fileurl = strings.Replace(fileurl,"$1",id,1)
 	fileurl = strings.Replace(fileurl,"$2",code.Language,1)
+
+	headerFileUrl := "problems/imports.$1.txt"
+	headerFileUrl = strings.Replace(headerFileUrl,"$1",code.Language,1)
 	
 	file,err := os.ReadFile(fileurl)
+	headerFile,err := os.ReadFile(headerFileUrl)
 	if err != nil {
 		return "";
 	}
 	boilerplate := string(file)
-	sourceCode := strings.Replace(boilerplate,"$",code.Code,1) 
+	headers := string(headerFile)
+	sourceCode := strings.Replace(boilerplate,"#",headers,1)
+	sourceCode = strings.Replace(sourceCode,"$",code.Code,1) 
 	return sourceCode
 }
 

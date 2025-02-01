@@ -37,7 +37,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{os.Getenv("FRONTEND_ORIGIN")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization","user"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -126,7 +126,7 @@ func main() {
 		id := ctx.Param("problemId");
 		language := ctx.Param("language");
 
-		fileurl := "problems/$1/boilerplate.$2.txt"
+		fileurl := fmt.Sprintf("%s/$1/boilerplate.$2.txt",os.Getenv("PROBLEM_FILES"))
 		fileurl = strings.Replace(fileurl,"$1",id,1)
 		fileurl = strings.Replace(fileurl,"$2",language,1)
 		
@@ -164,5 +164,5 @@ func main() {
 		ctx.JSON(200,token)
 	})
 
-	router.Run(":3050")
+	router.Run(fmt.Sprintf(":%s",os.Getenv("BACKEND_PORT")))
 }

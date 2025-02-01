@@ -77,7 +77,7 @@ func CreateReq(db *sql.DB,code models.Code,id string,cases int) (models.Response
 		return res,0,err
 	}
 
-	resp, err := http.Post("http://localhost:8800/execute", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(fmt.Sprintf("%s/execute",os.Getenv("EXECUTER_ORIGIN")), "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Error sending request:", err)
 		return res,0,err
@@ -95,11 +95,11 @@ func CreateReq(db *sql.DB,code models.Code,id string,cases int) (models.Response
 }
 
 func readFile(code models.Code,id string) (string){
-	fileurl := "problems/$1/Main.$2.txt"
+	fileurl := "$1/Main.$2.txt"
 	fileurl = strings.Replace(fileurl,"$1",id,1)
 	fileurl = strings.Replace(fileurl,"$2",code.Language,1)
 
-	headerFileUrl := "problems/imports.$1.txt"
+	headerFileUrl := "imports.$1.txt"
 	headerFileUrl = strings.Replace(headerFileUrl,"$1",code.Language,1)
 	
 	file,err := os.ReadFile(fileurl)

@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  backend:
+    image: backend
+    container_name: backend
+    ports:
+      - "3050:3050"
+    volumes:
+      - "/e/golang/server/.env:/app/.env"
+    networks:
+      - app_network
+
+  executor:
+    image: kowshickraj/executer
+    container_name: executor
+    ports:
+      - "8800:8800"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

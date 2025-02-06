@@ -24,11 +24,10 @@ func HandleSolutions(db *sql.DB, id int, jwt string) ([]models.Solutions,error){
 
 
 
-func newSubmission(db *sql.DB,id string,code models.Code,email string,passed string) (error) {
+func newSubmission(db *sql.DB,id string,code models.Code,email string,passed int) (error) {
 	Pid ,_ := strconv.Atoi(id)
-	solved,_ := strconv.Atoi(passed)
 	var status string
-	if solved == 6 {
+	if passed == 6 {
 		status = "Accepted"
 	}else{
 		status = "Rejected"

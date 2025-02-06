@@ -2,11 +2,13 @@ package scripts
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"main/models"
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 )
 
 func CppExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
@@ -34,15 +36,25 @@ func CppExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
 
 		var out models.ResStatus
 
-		runCmd := exec.Command("./main")
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		runCmd := exec.CommandContext(ctx, "./main")
 
 		if input != "" {
 			runCmd.Stdin = bytes.NewBufferString(input)
 		}
 
 		runOutput, err := runCmd.CombinedOutput()
+
+		if ctx.Err() == context.DeadlineExceeded {
+			out.Id = 3
+			out.Description = fmt.Sprintf("runtime error: %s", string(context.DeadlineExceeded.Error()))
+			results <- out
+			return
+		}
+
 		if err != nil {
-			out.Id = 2
+			out.Id = 3
 			out.Description = fmt.Sprintf("runtime error: %s", string(runOutput))
 			results <- out
 			return
@@ -70,6 +82,9 @@ func CppExecuter(req models.Req, cases int) ([]models.ResStatus, int, error) {
 	os.Remove("main")
 
 	for result := range results {
+		if result.Id == 3 {
+			return res,0,fmt.Errorf("%s",result.Description)
+		}
 		res = append(res, result)
 	}
 

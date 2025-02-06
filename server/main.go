@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"main/aws"
 	"main/controllers"
 	"main/initializers"
 	"main/models"
@@ -10,18 +11,22 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
 var googleOauthConfig = &oauth2.Config{}
 var db = &sql.DB{}
+var client *s3.Client
 
 func init(){
 	initializers.LoadEnv();
 	db = initializers.ConnectDB();
+	client = initializers.AWSInit();
 
 	googleOauthConfig = &oauth2.Config{
 		ClientID: os.Getenv("GOOGLE_CLIENT_ID"),
@@ -100,7 +105,7 @@ func main() {
 
 		var code models.Code
 		ctx.ShouldBindJSON(&code)
-		res,err:= controllers.HandleSubmissions(db,code,id,jwt);
+		res,err:= controllers.HandleSubmissions(db,client,code,id,jwt);
 		if err != nil {
 			ctx.JSON(500, err.Error())
 			return
@@ -114,7 +119,7 @@ func main() {
 
 		var code models.Code
 		ctx.ShouldBindJSON(&code)
-		res,err:= controllers.HandleRun(db,code,id,jwt);
+		res,err:= controllers.HandleRun(db,client,code,id,jwt);
 		if err != nil {
 			ctx.JSON(500,err.Error());
 			return
@@ -126,16 +131,11 @@ func main() {
 		id := ctx.Param("problemId");
 		language := ctx.Param("language");
 
-		fileurl := fmt.Sprintf("%s/$1/boilerplate.$2.txt",os.Getenv("PROBLEM_FILES"))
+		fileurl := "$1/boilerplate.$2.txt"
 		fileurl = strings.Replace(fileurl,"$1",id,1)
 		fileurl = strings.Replace(fileurl,"$2",language,1)
 		
-		file,err := os.ReadFile(fileurl)
-		if err != nil {
-			ctx.JSON(500,err);
-			return
-		}
-		boilerplate := string(file)
+		boilerplate := aws.ReadFile(context.TODO(),client,os.Getenv("AWS_BUCKET"),fileurl)
 		fmt.Println(boilerplate)
 		ctx.JSON(200,boilerplate);
 	})

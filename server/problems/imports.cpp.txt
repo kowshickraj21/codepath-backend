@@ -1,43 +1,30 @@
-// Core Input/Output
-#include <iostream>     // Standard I/O streams (cin, cout)
-#include <iomanip>      // For output formatting
-#include <fstream>      // File input/output streams
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <string>
+#include <cstring>
+#include <sstream>
+#include <cmath>
+#include <algorithm>
+#include <numeric>
+#include <cstdlib>
+#include <vector>
+#include <deque>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <list>
+#include <bitset>
+#include <utility>
+#include <tuple>
+#include <chrono>
+#include <functional>
+#include <stdexcept>
+#include <iterator>
+#include <cassert>
+#include <limits>
 
-// Strings
-#include <string>       // Standard string class
-#include <cstring>      // C-style string manipulation
-#include <sstream>      // String stream for parsing and conversions
-
-// Math and Algorithms
-#include <cmath>        // Math functions (sqrt, pow, etc.)
-#include <algorithm>    // Standard algorithms (sort, binary_search, etc.)
-#include <numeric>      // Accumulate, GCD, and other numeric utilities
-#include <cstdlib>      // Random number generation and general utilities
-
-// Data Structures
-#include <vector>       // Dynamic array
-#include <deque>        // Double-ended queue
-#include <stack>        // Stack implementation
-#include <queue>        // Queue and priority queue
-#include <set>          // Set and multiset
-#include <map>          // Map and multimap
-#include <unordered_map> // Hash table (unordered_map)
-#include <unordered_set> // Hash set (unordered_set)
-#include <list>         // Doubly linked list
-#include <bitset>       // Fixed-size bit array
-
-// Utilities
-#include <utility>      // Pair and utility functions
-#include <tuple>        // Tuple for grouping multiple values
-#include <chrono>       // High-precision time utilities
-#include <functional>   // Function objects and binders
-
-// Exception Handling
-#include <stdexcept>    // Standard exceptions (e.g., runtime_error)
-
-// Iterators
-#include <iterator>     // Iterator utilities
-
-// Debugging and Limits
-#include <cassert>      // Assert for debugging
-#include <limits>       // Numeric limits (e.g., max, min values)
+using namespace std;
